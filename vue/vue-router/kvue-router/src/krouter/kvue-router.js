@@ -4,20 +4,46 @@ class VueRouter {
 // 1. 监听事件
     constructor(options){
         console.log('options', options)
-        this.options = options
-        this.routerMap = {}
-        this.options.routes.forEach(route =>{
-            this.routerMap[route.path] = route
-        })
+        this.$options = options
 
-        Vue.util.defineReactive(this, 'current', '/')
+
+        // Vue.util.defineReactive(this, 'current', '/')
+        this.current =  window.location.hash.slice(1) ||  '/'
         window.addEventListener('hashchange',this.hashchange.bind(this))
+        Vue.util.defineReactive(this, 'matched' , [])
+        // match 方法可以递归遍历路由表，获得匹配关系的数组
+        this.match()
+        // this.routerMap = {}
+        // this.options.routes.forEach(route =>{
+        //     this.routerMap[route.path] = route
+        // })
     }
+    match(routes){
+        routes  = routes || this.$options.routes
+        // 递归遍历
+        for(const route of routes){
+            // 首页匹配了
+            if(route.path === '/' && this.current === '/'){
+                this.matched.push(route)
+                return
+            }
+
+            // /about/info
+            if(route.path !== '/' && this.current.indexOf(route.path) != -1){
+                if(route.children){
+                    this.match(route.children)
+                }
+                this.matched.push(route)
+            }
+        }
+    }
+
     // Vue.util.defineReactive(this, )
     hashchange(onhashchange){
         const hash = window.location.hash.slice(1)
         this.current = hash
-
+        this.matched = [] // matched 数组清空，重新匹配
+        this.match()
         console.log('hash',hash)
     }
 }
@@ -59,10 +85,31 @@ VueRouter.install = function(_Vue){
         }
     })
     Vue.component('router-view',{
+
         render(h){
-            const { current, routerMap } = this.$router;
-            console.log(' this.$router',  this.$router)
-            const component = routerMap[current].component || null
+            // 1.标记当前router-view 的深度
+            // 2.路由匹配时，获取代表深度层级的matched数组
+            this.$vnode.data.routerView = true
+            let depth = 0
+            let parent = this.$parent
+            while(parent){
+                const vnodeData = parent.$vnode && parent.$vnode.data
+                if(vnodeData){
+                    if(vnodeData.routerView){
+                        // 说明是当前的parent一个router-view
+                        depth ++
+                    }
+                }
+                parent = parent.$parent
+            }
+            // const { current, routerMap } = this.$router;
+            // console.log(' this.$router',  this.$router)
+            // const component = routerMap[current].component || null
+            let component = null
+            const route = this.$router.matched[depth]
+            if(route){
+                component = route.component
+            }
             return h(component)
         }
     })
