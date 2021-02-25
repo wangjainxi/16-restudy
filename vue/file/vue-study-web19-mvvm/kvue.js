@@ -43,6 +43,7 @@ function observe(obj) {
 
 // 代理data中数据
 function proxy(vm) {
+  console.log('vm.$data', vm.$data)
   Object.keys(vm.$data).forEach(key => {
     Object.defineProperty(vm, key, {
       get() {
@@ -207,7 +208,7 @@ class Watcher {
 }
 
 // Dep: 保存所有watcher实例，当某个key发生变化，通知他们执行更新
-class Dep { 
+class Dep {
 
   constructor() {
     this.deps = []
@@ -216,7 +217,7 @@ class Dep {
   addDep(watcher) {
     this.deps.push(watcher)
   }
-  
+
   notify() {
     this.deps.forEach(dep => dep.update())
   }

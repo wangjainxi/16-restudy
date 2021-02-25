@@ -38,14 +38,11 @@ class Store {
   commit(type, payload) {
     // 1.获取mutation
     const entry = this._mutations[type]
-
     if (!entry) {
       console.error('大兄弟，没有这个mutation');
       return;
     }
-
     entry(this.state, payload)
-
   }
 
   // dispatch，执行异步任务或复杂逻辑
