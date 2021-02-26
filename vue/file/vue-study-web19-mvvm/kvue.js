@@ -125,6 +125,7 @@ class Compiler {
   compileText(node) {
     // 获取正则匹配表达式，从vm里面拿出它的值
     // node.textContent = this.$vm[RegExp.$1]
+    // this.update(node, RegExp.$1, 'text')
     this.update(node, RegExp.$1, 'text')
   }
 
@@ -170,7 +171,6 @@ class Compiler {
     new Watcher(this.$vm, exp, val => {
       fn && fn(node, val)
     })
-
   }
 
   textUpdater(node, val) {

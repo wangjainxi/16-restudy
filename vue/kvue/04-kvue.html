@@ -8,7 +8,12 @@
 <script src="./kvue.js"></script>
 <body>
     <div id="app">
-        <p @click="add">{{counter}}</p>
+        <p @click="add">counter1 {{counter}}</p>
+        <p @click="add">counter 2 {{counter}}</p>
+        <p @click="add">counter 3 {{counter}}</p>
+        <!-- <p @click="add">count a {{count}}</p>
+        <p @click="add">count b {{count}}</p> -->
+
         <p k-text="counter"></p>
         <p k-html="desc"></p>
         <span>test </span>
@@ -18,6 +23,7 @@
            el: '#app',
            data: {
             counter: 1,
+            // count: 3,
             desc: '<span>test </span>'
            },
            methods: {
@@ -26,12 +32,15 @@
                 }
            }
        })
-
-       setInterval(() =>{
+       if( app.counte < 2){
+        setTimeout(() =>{
            console.log('app.counter', app.counter)
             app.counter = app.counter + 1
+            // app.count ++
             console.log('app.counter', app)
        }, 1000)
+       }
+
     </script>
 </body>
 </html>

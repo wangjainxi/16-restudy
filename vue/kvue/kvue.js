@@ -1,15 +1,15 @@
 // 代理data中的数据
 function proxy(vm){
-    console.log('vm.$data', vm.$data)
+    // console.log('vm.$data', vm.$data)
     Object.keys(vm.$data).forEach(key =>{
         Object.defineProperty(vm, key, {
             get(){
                 // 这样的话，在页面中访问data中的值，可以直接转发vm.$data中的值
-                console.log('vm.$data[key]', vm.$data[key])
+                // console.log('vm.$data[key]', vm.$data[key])
                 return vm.$data[key]
             },
             set(v){
-                console.log('vm.$data[key] set', vm.$data[key])
+                // console.log('vm.$data[key] set', vm.$data[key])
                 vm.$data[key] = v
             }
         })
@@ -25,7 +25,7 @@ class KVue {
         // 响应化处理
         this.$options = options
         this.$data = options.data
-        console.log('aa', this)
+        // console.log('aa', this)
         observer(this.$data)
         proxy(this)
         // 编译器
@@ -39,17 +39,27 @@ function defineReactive(obj, key, val){
     // 用get方式将这个变量暴露出去让外界可以访问
     // 这时在内存中就会保存下来这个变量
     observer(val)
+
+    // 创建一个Dep实例
+    const dep = new Dep()
     Object.defineProperty(obj, key, {
         get(){
-            console.log('get key', key)
+            // // console.log('get key', key)
+            // 在一个全局变量上，把当前正在访问的watcher和这个dep建立关系
+            // 依赖收集： 把watcher和dep建立关系
+            // 希望watcher实例化时，访问一下对应的key，触发了get，同时把这个实例设置到Dep.target上
+            Dep.target && dep.addDep(Dep.target)
+            console.log('Dep.target1', Dep.target)
+            console.log("dep1  key " + key, dep)
             return val
         },
         set(newVal){
             if(newVal !== val){
                 observer(newVal)
                 val = newVal
-                // update 更新函数
-                update()
+
+                // 通知更新
+                dep.notify()
             }
         }
     })
@@ -100,10 +110,10 @@ class Compiler{
         // childNodes 能拿到所有节点
         el.childNodes.forEach(node =>{
             if(node.nodeType === 1){
-                console.log('编译元素', node.nodeName)
+                // // console.log('编译元素', node.nodeName)
                 this.compileElement(node)
             } else if (this.isInter(node)) {
-                console.log('编译文本', node.textContent)
+                // console.log('编译文本', node.textContent)
                 this.compileText(node)
             }
             if(node.childNodes){
@@ -122,7 +132,7 @@ class Compiler{
         const attrs = node.attributes
         Array.from(attrs).forEach(attr => {
             // attr: {name: 'k-text', value: counter}
-            console.log('attrs', attrs)
+            // console.log('attrs', attrs)
             const attrName = attr.name
             const exp = attr.value
             if(attrName.indexOf('k-') === 0){
@@ -143,7 +153,16 @@ class Compiler{
 
     // k-html
     html(node, exp){
-        node.innerHtml = this.$vm[exp]
+        // node.innerHtml = this.$vm[exp]
+        update(node, exp, 'html')
+    }
+
+    // 解析绑定表达式
+    compileText(node){
+        // 获取正则表达式，从vm里面拿出来做替换
+        // node.textContent = this.$vm[RegExp.$1]
+        this.update(node, RegExp.$1, 'text' )
+        // console.log('RegExp.$1', RegExp.$1)
     }
 
     // 凡是有动态值的时候，都得执行一次update更新函数，
@@ -153,7 +172,12 @@ class Compiler{
         // 初始化
         const fn = this[dir + 'Updater']
         fn && fn(node, this.$vm[exp])
-        // 更新
+        // console.log('node, exp, dir', node, exp, dir)
+        // console.log('this.$vm[exp]11', this.$vm[exp])
+        // 更新, 创建一个watcher
+        new Watcher(this.$vm, exp, val =>{
+            fn && fn(node, val)
+        })
     }
 
     // k-text
@@ -161,14 +185,12 @@ class Compiler{
         node.textContent = val
     }
 
-    // 解析绑定表达式
-    compileText(node){
-        // 获取正则表达式，从vm里面拿出来做替换
-        node.textContent = this.$vm[RegExp.$1]
-        // console.log()
+    htmlUpdater(node, val) {
+        node.innerHtml = val
     }
-}
 
+
+}
 
 // 管理某一个依赖，未来执行更新
 class Watcher{
@@ -176,6 +198,11 @@ class Watcher{
         this.updateFn = updateFn
         this.vm = vm
         this.key = key
+
+        // 读一下当前key，触发依赖收集
+        Dep.target = this
+        vm[key]
+        Dep.target = null
     }
 
     // 未来会被dep调用
@@ -185,6 +212,17 @@ class Watcher{
     }
 }
 
+// Dep: 保存所有watcher实例，当某个key发生变化，通知他们执行更新
 class Dep{
+    constructor(){
+        this.deps = []
+    }
 
+    addDep(watcher){
+        this.deps.push(watcher)
+    }
+
+    notify(){
+        this.deps.forEach(dep => dep.update())
+    }
 }
