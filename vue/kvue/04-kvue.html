@@ -11,8 +11,8 @@
         <p @click="add">counter1 {{counter}}</p>
         <p @click="add">counter 2 {{counter}}</p>
         <p @click="add">counter 3 {{counter}}</p>
-        <!-- <p @click="add">count a {{count}}</p>
-        <p @click="add">count b {{count}}</p> -->
+        <p @click="add">count a {{count}}</p>
+        <p @click="add">count b {{count}}</p>
 
         <p k-text="counter"></p>
         <p k-html="desc"></p>
@@ -23,7 +23,7 @@
            el: '#app',
            data: {
             counter: 1,
-            // count: 3,
+            count: 3,
             desc: '<span>test </span>'
            },
            methods: {
@@ -32,14 +32,16 @@
                 }
            }
        })
-       if( app.counte < 2){
-        setTimeout(() =>{
+
+        setInterval(() =>{
+            if( app.counter < 2){
            console.log('app.counter', app.counter)
             app.counter = app.counter + 1
-            // app.count ++
+            app.count ++
             console.log('app.counter', app)
+        }
        }, 1000)
-       }
+
 
     </script>
 </body>

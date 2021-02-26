@@ -59,6 +59,7 @@ function defineReactive(obj, key, val){
                 val = newVal
 
                 // 通知更新
+                console.log('dep33', dep)
                 dep.notify()
             }
         }
