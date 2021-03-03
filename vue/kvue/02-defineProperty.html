@@ -7,52 +7,88 @@
 </head>
 <body>
     <div id="app"></div>
-    <script>
-        function defineReactive(obj, key, val){
-            observer(val)
-            Object.defineProperty(obj, key, {
-                get(){
-                    console.log('get key', key)
-                    return val
-                },
-                set(newVal){
-                    if(newVal !== val){
-                        observer(newVal)
-                        val = newVal
-                        // update 更新函数
-                        update()
-                    }
+
+</body>
+</html>
+<script>
+
+    // 数组响应式
+    // 1.替换数组原型中的七个方法
+    const originProto = Array.prototype;
+    // 2.备份一份，修改备份
+    const arrayProto = Object.create(originProto)
+    console.log('arrayProto', arrayProto)
+    const arr = ['push', 'pop', 'shift', 'unshift', 'splice', 'reverse','sort']
+    arr.forEach(method =>{
+        arrayProto[method] = function(){
+            // 原始操作
+            originProto[method].call(this, arguments)
+        // 覆盖操作：通知更新
+        console.log('array set: '+ method + '操作', arguments)
+        update()
+        }
+    })
+
+    // 对象响应式
+    function defineReactive(obj, key, val){
+        observer(val)
+        Object.defineProperty(obj, key, {
+            get(){
+                console.log('get key', key)
+                return val
+            },
+            set(newVal){
+                if(newVal !== val){
+                    observer(newVal)
+                    val = newVal
+                    // update 更新函数
+                    update()
                 }
-            })
-        }
-
-        function update(){
-            document.querySelector('#app').innerHTML = obj.foo
-        }
-
-        function observer(obj){
-            if(typeof obj !== 'object' || obj === null){
-                return
             }
+        })
+    }
+
+
+    function update(){
+        document.querySelector('#app').innerHTML = JSON.stringify(obj.arr)
+    }
+
+    function observer(obj){
+        if(typeof obj !== 'object' || obj === null){
+            return
+        }
+
+        // if(Array.isArray(obj)) {
+            if(Object.prototype.toString.call(obj) === '[object Array]') {
+            // 覆盖原型，替换七个变更操作
+            obj.__proto__ = arrayProto
+            const keys = Object.keys(obj)
+            for(let i = 0; i < obj.length; i++){
+                observer(obj[i])
+            }
+            console.log('aa', obj)
+        }
+        if(Object.prototype.toString.call(obj) === '[object Object]'){
             Object.keys(obj).forEach(key =>{
                 defineReactive(obj, key, obj[key])
             })
         }
-        const obj = {
-            foo: '1',
-            name: '111',
-            age: 222,
-            info: {
-                height: 222
-            }
+
+    }
+    const obj = {
+        foo: '1',
+        name: '111',
+        arr: [],
+        age: 222,
+        info: {
+            height: 222
         }
+    }
 
-        observer(obj)
+    observer(obj)
 
-        setInterval(() =>{
-            obj.foo = new Date().toLocaleTimeString()
-        },1000)
+    setInterval(() =>{
+        obj.arr.unshift(new Date().toLocaleTimeString())
+    },1000)
 // obj.name
-    </script>
-</body>
-</html>
+</script>

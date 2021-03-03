@@ -16,6 +16,8 @@
 
         <p k-text="counter"></p>
         <p k-html="desc"></p>
+        <input type="text" k-model="count">
+
         <span>test </span>
     </div>
     <script>
@@ -28,19 +30,19 @@
            },
            methods: {
                 add(){
-
+                    app.counter ++
                 }
            }
        })
 
-        setInterval(() =>{
-            if( app.counter < 2){
-           console.log('app.counter', app.counter)
-            app.counter = app.counter + 1
-            app.count ++
-            console.log('app.counter', app)
-        }
-       }, 1000)
+    //     setInterval(() =>{
+    //         if( app.counter < 2){
+    //        console.log('app.counter', app.counter)
+    //         app.counter = app.counter + 1
+    //         app.count ++
+    //         console.log('app.counter', app)
+    //     }
+    //    }, 1000)
 
 
     </script>

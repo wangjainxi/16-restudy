@@ -49,8 +49,8 @@ function defineReactive(obj, key, val){
             // 依赖收集： 把watcher和dep建立关系
             // 希望watcher实例化时，访问一下对应的key，触发了get，同时把这个实例设置到Dep.target上
             Dep.target && dep.addDep(Dep.target)
-            console.log('Dep.target1', Dep.target)
-            console.log("dep1  key " + key, dep)
+            // console.log('Dep.target1', Dep.target)
+            // console.log("dep1  key " + key, dep)
             return val
         },
         set(newVal){
@@ -142,20 +142,45 @@ class Compiler{
                 this[dir] && this[dir](node, exp)
             }
             // 处理事件
+            if(this.isEvent(attrName)){
+                // @click="onClick"
+                const dir = attrName.substring(1)
+                // 事件监听
+                this.eventHandler(node, exp, dir)
+            }
         })
     }
 
+    isEvent(dir){
+        return dir.startsWith('@')
+    }
+
+    eventHandler(node, exp, dir){
+        const event= this.$vm.$options.methods[exp]
+        // 绑定当前这个的组件实例（this.$vm）；方便函数内部使用；
+       node.addEventListener(dir, event.bind(this.$vm))
+    }
+
+    // k-model
+    model(node, exp){
+        // modelUpdater只完成赋值和更新
+        this.update(node, exp, 'model')
+
+        node.addEventListener('input', e =>{
+            this.$vm.$data[exp]  = e.target.value
+        })
+    }
 
     // k-text
     text(node, exp){
         // node.textContent = this.$vm[exp]
-        update(node, exp, 'text')
+        this.update(node, exp, 'text')
     }
 
     // k-html
     html(node, exp){
         // node.innerHtml = this.$vm[exp]
-        update(node, exp, 'html')
+        this.update(node, exp, 'html')
     }
 
     // 解析绑定表达式
@@ -188,6 +213,11 @@ class Compiler{
 
     htmlUpdater(node, val) {
         node.innerHtml = val
+    }
+
+    modelUpdater(node, val) {
+        // 表单元素赋值
+        node.value = val
     }
 
 
