@@ -16,8 +16,6 @@ function proxy(vm){
     })
 }
 
-
-
 // 响应式操作
 class KVue {
     constructor(options) {
@@ -32,7 +30,6 @@ class KVue {
         new Compiler('#app', this)
     }
 }
-
 
 function defineReactive(obj, key, val){
     // 闭包，val函数作用域内的一个变量，
@@ -66,10 +63,6 @@ function defineReactive(obj, key, val){
     })
 }
 
-function update(){
-
-}
-
 function observer(obj){
     if(typeof obj !== 'object' || obj === null){
         return
@@ -79,7 +72,6 @@ function observer(obj){
     new Observer(obj)
 
 }
-
 
 // 数据响应化
 class Observer{
@@ -98,7 +90,6 @@ class Observer{
 
 // compiler : 解析模板，收集依赖， 并和之前拦截的属性关联起来
 // new Compiler('#app', vm) 找到宿主元素,kvue 实例
-
 class Compiler{
     constructor(el, vm){
         this.$el = document.querySelector(el)
@@ -126,6 +117,15 @@ class Compiler{
     isInter(node){
         return node.nodeType === 3 && /\{\{(.*)\}\}/.test(node.textContent)
     }
+
+    // 解析绑定表达式
+    compileText(node){
+        // 获取正则表达式，从vm里面拿出来做替换
+        // node.textContent = this.$vm[RegExp.$1]
+        this.update(node, RegExp.$1, 'text' )
+        // console.log('RegExp.$1', RegExp.$1)
+    }
+
 
     // 编译元素
     compileElement(node){
@@ -183,18 +183,12 @@ class Compiler{
         this.update(node, exp, 'html')
     }
 
-    // 解析绑定表达式
-    compileText(node){
-        // 获取正则表达式，从vm里面拿出来做替换
-        // node.textContent = this.$vm[RegExp.$1]
-        this.update(node, RegExp.$1, 'text' )
-        // console.log('RegExp.$1', RegExp.$1)
-    }
 
     // 凡是有动态值的时候，都得执行一次update更新函数，
     // 在update更新函数里面除了初始化，还要把更新的watcher去创建
     // 要做的指令名称
     update(node, exp, dir){
+        // v-model="count" dir: model exp: count
         // 初始化
         const fn = this[dir + 'Updater']
         fn && fn(node, this.$vm[exp])
